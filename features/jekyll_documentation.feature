@@ -141,6 +141,7 @@ Feature: Generate Jekyll documentation from test examples
     """
     ---
     layout: default
+    title: Example API
     ---
 
     # Example API
@@ -165,6 +166,7 @@ Feature: Generate Jekyll documentation from test examples
     """
     ---
     layout: default
+    title: Orders API
     ---
 
     # Orders API
