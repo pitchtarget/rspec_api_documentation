@@ -19,8 +19,8 @@ module RspecApiDocumentation
 
       def requests
         super.map do |hash|
-          hash[:request_body_is_json] = hash[:request_content_type] == 'application/json'
-          hash[:response_body_is_json] = hash[:response_content_type] == 'application/json'
+          hash[:request_body_is_json] = hash[:request_content_type] =~ /application\/json/
+          hash[:response_body_is_json] = hash[:response_content_type] =~ /application\/json/
           
           hash[:request_body_text] = format_json(hash[:request_body]) if hash[:request_body_is_json]
           hash[:response_body_text] = format_json(hash[:response_body]) if hash[:response_body_is_json]
