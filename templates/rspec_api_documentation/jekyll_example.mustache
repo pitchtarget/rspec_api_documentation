@@ -1,0 +1,81 @@
+---
+layout: default
+---
+
+# {{ resource_name }} API
+
+## {{ description }}
+
+### {{ http_method }} {{ route }}
+
+{{# explanation }}
+{{ explanation }}
+{{/ explanation }}
+
+{{# has_parameters? }}
+### Parameters
+
+Name | Description |
+-----|-------------|
+{{# parameters }}
+{{ name }} {{# required }}(required){{/ required }} | {{ description }} |
+{{/ parameters }}
+{{/ has_parameters? }}
+
+{{# requests }}
+### Request
+
+{% highlight http %}
+{{ request_method }} {{ request_path }} HTTP/1.1
+{{ request_headers_text }}
+{{ request_query_parameters_text }}
+{% endhighlight %}
+
+{{# request_body }}
+#### Body
+
+{{# request_body_is_json }}
+{% highlight json %}
+{{{ request_body_text }}}
+{% endhighlight %}
+{{/ request_body_is_json }}
+{{^ request_body_is_json }}
+{% highlight %}
+{{{ request_body }}}
+{% endhighlight %}
+{{/ request_body_is_json }}
+{{/ request_body }}
+
+{{# curl }}
+#### cURL
+
+{% highlight sh %}
+{{ curl }}
+{% endhighlight %}
+{{/ curl }}
+
+{{# response_status }}
+### Response
+
+{% highlight http %}
+HTTP/1.1 {{ response_status }} {{ response_status_text}}
+{{ response_headers_text }}
+{% endhighlight %}
+
+{{# response_body }}
+#### Body
+
+{{# response_body_is_json }}
+{% highlight json %}
+{{{ response_body_text }}}
+{% endhighlight %}
+{{/ response_body_is_json }}
+{{^ response_body_is_json }}
+{% highlight %}
+{{{ response_body }}}
+{% endhighlight %}
+{{/ response_body_is_json }}
+{{/ response_body }}
+{{/ response_status }}
+{{/ requests }}
+
