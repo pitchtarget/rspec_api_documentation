@@ -41,9 +41,21 @@ Name | Description |
 {% endhighlight %}
 {{/ request_body_is_json }}
 {{^ request_body_is_json }}
-{% highlight %}
+{{# request_body_is_multipart }}
+{{# request_body_parsed }}
+    {{ name }}
+
+{% highlight json %}
+{{{ value }}}
+{% endhighlight %}
+
+{{/ request_body_parsed }}
+{{/ request_body_is_multipart }}
+{{^ request_body_is_multipart }}
+{% highlight text %}
 {{{ request_body }}}
 {% endhighlight %}
+{{/ request_body_is_multipart }}
 {{/ request_body_is_json }}
 {{/ request_body }}
 
@@ -72,7 +84,7 @@ HTTP/1.1 {{ response_status }} {{ response_status_text}}
 {% endhighlight %}
 {{/ response_body_is_json }}
 {{^ response_body_is_json }}
-{% highlight %}
+{% highlight text %}
 {{{ response_body }}}
 {% endhighlight %}
 {{/ response_body_is_json }}

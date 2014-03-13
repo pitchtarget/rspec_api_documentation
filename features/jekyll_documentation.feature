@@ -195,7 +195,7 @@ Feature: Generate Jekyll documentation from test examples
 
     #### Body
 
-    {% highlight %}
+    {% highlight text %}
     name=Order+3&amount=33.0
     {% endhighlight %}
 
