@@ -1,5 +1,6 @@
 require 'active_support/core_ext/object/to_query'
 require 'base64'
+require 'multipart_parser/reader'
 
 module RspecApiDocumentation
   class Curl < Struct.new(:method, :path, :data, :headers)
@@ -39,8 +40,14 @@ module RspecApiDocumentation
       "#{host}#{path}"
     end
 
+    alias :original_headers :headers
+
+    def is_multipart?
+      original_headers["Content-Type"].try(:match, /\Amultipart\/form-data/)
+    end
+
     def headers
-      filter_headers(super).map do |k, v|
+      filter_headers(super).reject{ |k, v| k.eql?("Content-Type") && v.match(/multipart\/form-data/) }.map do |k, v|
         if k =~ /authorization/i && v =~ /^Basic/
           "\\\n\t-u #{format_auth_header(v)}"
         else
@@ -54,8 +61,29 @@ module RspecApiDocumentation
     end
 
     def post_data
-      escaped_data = data.to_s.gsub("'", "\\u0027")
-      "-d '#{escaped_data}'"
+      if is_multipart?
+        boundary = MultipartParser::Reader.extract_boundary_value(original_headers["Content-Type"])
+        reader = MultipartParser::Reader.new(boundary)
+        flags = []
+        reader.on_part do |part|
+          value = ""
+          unless part.filename.nil?
+            value = "@#{part.filename};type=#{part.mime}"
+          else
+            part.on_data do |data|
+              value += data
+            end
+          end
+          part.on_end do
+            flags.push "-F '#{part.name}=#{value.gsub("'", "\\u0027")}'"
+          end
+        end
+        reader.write(data.to_s)
+        flags.join(" ")
+      else
+        escaped_data = data.to_s.gsub("'", "\\u0027")
+        "-d '#{escaped_data}'"
+      end
     end
 
     private
