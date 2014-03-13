@@ -44,8 +44,9 @@ module RspecApiDocumentation
         reader = MultipartParser::Reader.new(boundary)
         parsed = []
         reader.on_part do |part|
-          value = ""
-          unless part.filename.nil?
+          value = ''
+          type = ''
+          if part.filename
             value = "@#{part.filename};type=#{part.mime}"
           else
             part.on_data do |data|
@@ -56,10 +57,11 @@ module RspecApiDocumentation
             value = value.gsub("'", "\\u0027")
             begin
               value = format_json(value)
+              type = 'json'
             rescue => error
-              # NOOP
+              type = 'text'
             end
-            parsed << { :name => part.name, :value => value }
+            parsed << { :name => part.name, :value => value, :type => type }
           end
         end
         reader.write(request_body.to_s)
