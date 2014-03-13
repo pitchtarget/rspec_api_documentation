@@ -19,7 +19,7 @@ title: {{ resource_name }} API
 Name | Description |
 -----|-------------|
 {{# parameters }}
-{{ name }} {{# required }}(required){{/ required }} | {{ description }} |
+`{{ name }}` {{# required }}(required){{/ required }} | {{ description }} |
 {{/ parameters }}
 {{/ has_parameters? }}
 
@@ -63,7 +63,7 @@ Name | Description |
 #### cURL
 
 {% highlight sh %}
-{{ curl }}
+{{{ curl }}}
 {% endhighlight %}
 {{/ curl }}
 

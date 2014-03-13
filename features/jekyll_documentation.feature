@@ -180,9 +180,9 @@ Feature: Generate Jekyll documentation from test examples
 
     Name | Description |
     -----|-------------|
-    name (required) | Name of order |
-    amount (required) | Amount paid |
-    description  | Some comments on the order |
+    `name` (required) | Name of order |
+    `amount` (required) | Amount paid |
+    `description`  | Some comments on the order |
 
     ### Request
 

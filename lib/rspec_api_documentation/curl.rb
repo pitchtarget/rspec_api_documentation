@@ -13,7 +13,7 @@ module RspecApiDocumentation
     end
 
     def post
-      "curl \"#{url}\" #{post_data} -X POST #{headers}"
+      "curl \"#{url}\" -X POST #{headers} #{post_data}"
     end
 
     def get
@@ -25,15 +25,15 @@ module RspecApiDocumentation
     end
 
     def put
-      "curl \"#{url}\" #{post_data} -X PUT #{headers}"
+      "curl \"#{url}\" -X PUT #{headers} #{post_data}"
     end
 
     def delete
-      "curl \"#{url}\" #{post_data} -X DELETE #{headers}"
+      "curl \"#{url}\" -X DELETE #{headers} #{post_data}"
     end
 
     def patch
-      "curl \"#{url}\" #{post_data} -X PATCH #{headers}"
+      "curl \"#{url}\" -X PATCH #{headers} #{post_data}"
     end
 
     def url
@@ -75,7 +75,7 @@ module RspecApiDocumentation
             end
           end
           part.on_end do
-            flags.push "-F '#{part.name}=#{value.gsub("'", "\\u0027")}'"
+            flags.push "\\\n\t-F '#{part.name}=#{value.gsub("'", "\\u0027")}'"
           end
         end
         reader.write(data.to_s)
