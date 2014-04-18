@@ -178,11 +178,11 @@ Feature: Generate Jekyll documentation from test examples
 
     ### Parameters
 
-    Name | Description |
-    -----|-------------|
-    `name` (required) | Name of order |
-    `amount` (required) | Amount paid |
-    `description`  | Some comments on the order |
+    Name | Required? | Description |
+    -----|-----------|-------------|
+    `name` | Yes | Name of order |
+    `amount` | Yes | Amount paid |
+    `description` | No | Some comments on the order |
 
     ### Request
 

@@ -16,10 +16,10 @@ title: {{ resource_name }} API
 {{# has_parameters? }}
 ### Parameters
 
-Name | Description |
------|-------------|
+Name | Required? | Description |
+-----|-----------|-------------|
 {{# parameters }}
-`{{ name }}` {{# required }}(required){{/ required }} | {{ description }} |
+`{{ name }}` | {{# required }}Yes{{/ required }}{{^ required }}No{{/ required }} | {{ description }} |
 {{/ parameters }}
 {{/ has_parameters? }}
 
