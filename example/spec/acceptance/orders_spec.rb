@@ -1,5 +1,4 @@
-require 'spec_helper'
-require 'rspec_api_documentation/dsl'
+require 'acceptance_helper'
 
 resource "Orders" do
   header "Accept", "application/json"
@@ -19,14 +18,14 @@ resource "Orders" do
     end
 
     example_request "Getting a list of orders" do
-      response_body.should == Order.all.to_json
-      status.should == 200
+      expect(response_body).to eq(Order.all.to_json)
+      expect(status).to eq(200)
     end
   end
 
   head "/orders" do
     example_request "Getting the headers" do
-      response_headers["Content-Type"].should == "application/json; charset=utf-8"
+      expect(response_headers["Cache-Control"]).to eq("no-cache")
     end
   end
 
@@ -34,6 +33,10 @@ resource "Orders" do
     parameter :name, "Name of order", :required => true, :scope => :order
     parameter :paid, "If the order has been paid for", :required => true, :scope => :order
     parameter :email, "Email of user that placed the order", :scope => :order
+
+    response_field :name, "Name of order", :scope => :order, "Type" => "String"
+    response_field :paid, "If the order has been paid for", :scope => :order, "Type" => "Boolean"
+    response_field :email, "Email of user that placed the order", :scope => :order, "Type" => "String"
 
     let(:name) { "Order 1" }
     let(:paid) { true }
@@ -43,17 +46,17 @@ resource "Orders" do
 
     example_request "Creating an order" do
       explanation "First, create an order, then make a later request to get it back"
-      response_body.should be_json_eql({
+
+      order = JSON.parse(response_body)
+      expect(order.except("id", "created_at", "updated_at")).to eq({
         "name" => name,
         "paid" => paid,
         "email" => email,
-      }.to_json)
-      status.should == 201
-
-      order = JSON.parse(response_body)
+      })
+      expect(status).to eq(201)
 
       client.get(URI.parse(response_headers["location"]).path, {}, headers)
-      status.should == 200
+      expect(status).to eq(200)
     end
   end
 
@@ -61,8 +64,8 @@ resource "Orders" do
     let(:id) { order.id }
 
     example_request "Getting a specific order" do
-      response_body.should == order.to_json
-      status.should == 200
+      expect(response_body).to eq(order.to_json)
+      expect(status).to eq(200)
     end
   end
 
@@ -77,7 +80,7 @@ resource "Orders" do
     let(:raw_post) { params.to_json }
 
     example_request "Updating an order" do
-      status.should == 200
+      expect(status).to eq(204)
     end
   end
 
@@ -85,7 +88,7 @@ resource "Orders" do
     let(:id) { order.id }
 
     example_request "Deleting an order" do
-      status.should == 200
+      expect(status).to eq(204)
     end
   end
 end

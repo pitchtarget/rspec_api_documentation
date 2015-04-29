@@ -3,26 +3,23 @@ require 'rack/utils'
 require 'rack/test/utils'
 
 module RspecApiDocumentation::DSL
+  # DSL methods available inside the RSpec example.
   module Endpoint
     extend ActiveSupport::Concern
     include Rack::Test::Utils
 
-    delegate :response_headers, :status, :response_status, :response_body, :to => :rspec_api_documentation_client
+    delegate :response_headers, :response_status, :response_body, :to => :rspec_api_documentation_client
 
     module ClassMethods
       def example_request(description, params = {}, &block)
-        file_path = caller.first[0, caller.first =~ /:/]
-
-        location = caller.first[0, caller.first =~ /(:in|$)/]
-        location = relative_path(location)
-
-        example description, :location => location, :file_path => file_path do
+        example description, :caller => block.send(:caller) do
           do_request(params)
           instance_eval &block if block_given?
         end
       end
 
       private
+
       # from rspec-core
       def relative_path(line)
         line = line.sub(File.expand_path("."), ".")
@@ -38,13 +35,27 @@ module RspecApiDocumentation::DSL
       params_or_body = nil
       path_or_query = path
 
-      if method == :get && !query_string.blank?
+      if http_method == :get && !query_string.blank?
         path_or_query += "?#{query_string}"
       else
-        params_or_body = respond_to?(:raw_post) ? raw_post : params
+        if respond_to?(:raw_post)
+          params_or_body = raw_post
+        else
+          formatter = RspecApiDocumentation.configuration.post_body_formatter
+          case formatter
+          when :json
+            params_or_body = params.empty? ? nil : params.to_json
+          when :xml
+            params_or_body = params.to_xml
+          when Proc
+            params_or_body = formatter.call(params)
+          else
+            params_or_body = params
+          end
+        end
       end
 
-      rspec_api_documentation_client.send(method, path_or_query, params_or_body, headers)
+      rspec_api_documentation_client.send(http_method, path_or_query, params_or_body, headers)
     end
 
     def query_string
@@ -55,7 +66,7 @@ module RspecApiDocumentation::DSL
       parameters = example.metadata.fetch(:parameters, {}).inject({}) do |hash, param|
         set_param(hash, param)
       end
-      parameters.merge!(extra_params)
+      parameters.deep_merge!(extra_params)
       parameters
     end
 
@@ -76,8 +87,16 @@ module RspecApiDocumentation::DSL
       end
     end
 
-    def method
+    def http_method
       example.metadata[:method]
+    end
+
+    def method
+      http_method
+    end
+
+    def status
+      rspec_api_documentation_client.status
     end
 
     def in_path?(param)
@@ -104,6 +123,10 @@ module RspecApiDocumentation::DSL
       example.metadata[:explanation] = text
     end
 
+    def example
+      RSpec.current_example
+    end
+
     private
 
     def rspec_api_documentation_client
@@ -113,6 +136,7 @@ module RspecApiDocumentation::DSL
     def extra_params
       return {} if @extra_params.nil?
       @extra_params.inject({}) do |h, (k, v)|
+        v = v.is_a?(Hash) ? v.stringify_keys : v
         h[k.to_s] = v
         h
       end

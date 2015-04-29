@@ -1,7 +1,7 @@
 module RspecApiDocumentation
   module Writers
     class CombinedTextWriter < Writer
-      def self.write(index, configuration)
+      def write
         index.examples.each do |rspec_example|
           example = CombinedTextExample.new(rspec_example)
           FileUtils.mkdir_p(configuration.docs_dir.join(example.resource_name))
@@ -44,7 +44,7 @@ module RspecApiDocumentation
       end
 
       def resource_name
-        example.resource_name.downcase.gsub(/\s+/, '_')
+        example.resource_name.to_s.downcase.gsub(/\s+/, '_')
       end
 
       def description

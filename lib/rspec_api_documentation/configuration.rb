@@ -13,6 +13,23 @@ module RspecApiDocumentation
       @groups ||= []
     end
 
+    # Defines a new sub configuration
+    #
+    # Automatically sets the `filter` to the group name, and the `docs_dir` to
+    # a subfolder of the parent's `doc_dir` named the group name.
+    #
+    #   RspecApiDocumentation.configure do |config|
+    #     config.docs_dir = "doc/api"
+    #     config.define_group(:public) do |config|
+    #       # Default values
+    #       config.docs_dir = "doc/api/public"
+    #       config.filter = :public
+    #     end
+    #   end
+    #
+    # Params:
+    # +name+:: String name of the group
+    # +block+:: Block configuration block
     def define_group(name, &block)
       subconfig = self.class.new(self)
       subconfig.filter = name
@@ -61,6 +78,20 @@ module RspecApiDocumentation
     add_setting :io_docs_protocol, :default => "http"
     add_setting :request_headers_to_include, :default => nil
     add_setting :response_headers_to_include, :default => nil
+    add_setting :html_embedded_css_file, :default => nil
+
+    # Change how the post body is formatted by default, you can still override by `raw_post`
+    # Can be :json, :xml, or a proc that will be passed the params
+    #
+    #   RspecApiDocumentation.configure do |config|
+    #     config.post_body_formatter = Proc.new do |params|
+    #       # convert to whatever you want
+    #       params.to_s
+    #     end
+    #   end
+    #
+    # See RspecApiDocumentation::DSL::Endpoint#do_request
+    add_setting :post_body_formatter, :default => Proc.new { |_| Proc.new { |params| params } }
 
     def client_method=(new_client_method)
       RspecApiDocumentation::DSL::Resource.module_eval <<-RUBY
@@ -75,10 +106,23 @@ module RspecApiDocumentation
       @client_method ||= :client
     end
 
+    def disable_dsl_status!
+      RspecApiDocumentation::DSL::Endpoint.module_eval <<-RUBY
+        undef status
+      RUBY
+    end
+
+    def disable_dsl_method!
+      RspecApiDocumentation::DSL::Endpoint.module_eval <<-RUBY
+        undef method
+      RUBY
+    end
+
     def settings
       @settings ||= {}
     end
 
+    # Yields itself and sub groups to hook into the Enumerable module
     def each(&block)
       yield self
       groups.map { |g| g.each &block }

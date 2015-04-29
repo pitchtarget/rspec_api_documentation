@@ -1,4 +1,5 @@
 module RspecApiDocumentation::DSL
+  # DSL methods available at the example group level
   module Resource
     extend ActiveSupport::Concern
 
@@ -41,25 +42,34 @@ module RspecApiDocumentation::DSL
         parameters.push(options.merge(:name => name.to_s, :description => description))
       end
 
+      def response_field(name, description, options = {})
+        response_fields.push(options.merge(:name => name.to_s, :description => description))
+      end
+
       def header(name, value)
         headers[name] = value
       end
 
       private
-      def parameters
-        metadata[:parameters] ||= []
-        if superclass_metadata && metadata[:parameters].equal?(superclass_metadata[:parameters])
-          metadata[:parameters] = Marshal.load(Marshal.dump(superclass_metadata[:parameters]))
+
+      def safe_metadata(field, default)
+        metadata[field] ||= default
+        if superclass_metadata && metadata[field].equal?(superclass_metadata[field])
+          metadata[field] = Marshal.load(Marshal.dump(superclass_metadata[field]))
         end
-        metadata[:parameters]
+        metadata[field]
+      end
+
+      def parameters
+        safe_metadata(:parameters, [])
+      end
+
+      def response_fields
+        safe_metadata(:response_fields, [])
       end
 
       def headers
-        metadata[:headers] ||= {}
-        if superclass_metadata && metadata[:headers].equal?(superclass_metadata[:headers])
-          metadata[:headers] = Marshal.load(Marshal.dump(superclass_metadata[:headers]))
-        end
-        metadata[:headers]
+        safe_metadata(:headers, {})
       end
 
       def parameter_keys

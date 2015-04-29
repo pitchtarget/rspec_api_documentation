@@ -74,11 +74,11 @@ module RspecApiDocumentation
       end
 
       def dirname
-        resource_name.downcase.gsub(/\s+/, '_')
+        resource_name.to_s.downcase.gsub(/\s+/, '_').sub(/^\//,'')
       end
 
       def filename
-        basename = description.downcase.gsub(/\s+/, '_').gsub(/[^a-z_]/, '')
+        basename = description.downcase.gsub(/\s+/, '_').gsub(Pathname::SEPARATOR_PAT, '')
         "#{basename}.json"
       end
 
@@ -90,6 +90,7 @@ module RspecApiDocumentation
           :description => description,
           :explanation => explanation,
           :parameters => respond_to?(:parameters) ? parameters : [],
+          :response_fields => respond_to?(:response_fields) ? response_fields : [],
           :requests => requests
         }
       end

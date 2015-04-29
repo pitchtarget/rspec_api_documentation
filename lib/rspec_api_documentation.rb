@@ -1,8 +1,11 @@
 require 'active_support'
 require 'active_support/inflector'
+require 'active_support/core_ext/hash/conversions'
+require 'active_support/core_ext/hash/deep_merge'
 require 'cgi'
 require 'json'
 
+# Namespace for RspecApiDocumentation
 module RspecApiDocumentation
   extend ActiveSupport::Autoload
 
@@ -17,6 +20,7 @@ module RspecApiDocumentation
     autoload :Index
     autoload :ClientBase
     autoload :Headers
+    autoload :HttpTestClient
   end
 
   autoload :DSL
@@ -65,6 +69,13 @@ module RspecApiDocumentation
     @documentations ||= configuration.map { |config| ApiDocumentation.new(config) }
   end
 
+  # Configures RspecApiDocumentation
+  #
+  # See RspecApiDocumentation::Configuration for more information on configuring.
+  #
+  #   RspecApiDocumentation.configure do |config|
+  #     config.docs_dir = "doc/api"
+  #   end
   def self.configure
     yield configuration if block_given?
   end

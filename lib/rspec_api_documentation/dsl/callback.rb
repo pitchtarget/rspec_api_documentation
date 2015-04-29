@@ -1,4 +1,5 @@
 module RspecApiDocumentation::DSL
+  # DSL Methods for testing server callbacks
   module Callback
     extend ActiveSupport::Concern
 
@@ -15,7 +16,7 @@ module RspecApiDocumentation::DSL
     end
 
     def destination
-      @destination ||= RspecApiDocumentation::TestServer.new(self)
+      @destination ||= RspecApiDocumentation::TestServer.new(RSpec.current_example)
     end
 
     def callback_url

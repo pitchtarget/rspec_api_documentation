@@ -4,27 +4,7 @@
     <title>{{resource_name}} API</title>
     <meta charset="utf-8">
     <style>
-      td.required .name:after {
-        float: right;
-        content: "required";
-        font-weight: normal;
-        color: #F08080;
-      }
-
-      p {
-        padding: 15px;
-        font-size: 130%;
-      }
-
-      pre {
-        white-space: pre-wrap;
-      }
-
-      body {
-        margin-left: auto;
-        margin-right: auto;
-        width: 900px;
-      }
+      {{{ styles }}}
     </style>
   </head>
   <body>
@@ -36,7 +16,7 @@
         <h3>{{ http_method }} {{ route }}</h3>
         {{# explanation }}
           <p class="explanation">
-            {{ explanation }}
+            {{{ explanation }}}
           </p>
         {{/ explanation }}
 
@@ -69,11 +49,42 @@
           </table>
         {{/ has_parameters? }}
 
+        {{# has_response_fields? }}
+          <h3>Response Fields</h3>
+          <table class="response-fields table table-striped table-bordered table-condensed">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{# response_fields }}
+              <tr>
+                <td>
+                  {{# scope }}
+                    <span class="name">{{ scope }}[{{ name }}]</span>
+                  {{/ scope }}
+                  {{^ scope }}
+                    <span class="name">{{ name }}</span>
+                  {{/ scope }}
+                </td>
+                <td>
+                  <span class="description">{{ description }}</span>
+                </td>
+              </tr>
+              {{/ response_fields }}
+            </tbody>
+          </table>
+        {{/ has_response_fields? }}
+
         {{# requests }}
           <h3>Request</h3>
 
-          <h4>Headers</h4>
-          <pre class="request headers">{{ request_headers_text }}</pre>
+          {{# request_headers_text }}
+            <h4>Headers</h4>
+            <pre class="request headers">{{ request_headers_text }}</pre>
+          {{/ request_headers_text }}
 
           <h4>Route</h4>
           <pre class="request route highlight">{{ request_method }} {{ request_path }}</pre>
@@ -95,13 +106,15 @@
 
           {{# response_status }}
             <h3>Response</h3>
-            <h4>Headers</h4>
-            <pre class="response headers">{{ response_headers_text }}</pre>
+            {{# response_headers_text }}
+              <h4>Headers</h4>
+              <pre class="response headers">{{ response_headers_text }}</pre>
+            {{/ response_headers_text }}
             <h4>Status</h4>
             <pre class="response status">{{ response_status }} {{ response_status_text}}</pre>
             {{# response_body }}
               <h4>Body</h4>
-              <pre class="response body">{{{ response_body }}}</pre>
+              <pre class="response body">{{ response_body }}</pre>
             {{/ response_body }}
           {{/ response_status }}
         {{/ requests }}

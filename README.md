@@ -1,6 +1,7 @@
 [![Travis status](https://secure.travis-ci.org/zipmark/rspec_api_documentation.png)](https://secure.travis-ci.org/zipmark/rspec_api_documentation)
 [![Gemnasium status](https://gemnasium.com/zipmark/rspec_api_documentation.png)](https://gemnasium.com/zipmark/rspec_api_documentation)
 [![Code Climate](https://codeclimate.com/github/zipmark/rspec_api_documentation.png)](https://codeclimate.com/github/zipmark/rspec_api_documentation)
+[![Inline docs](http://inch-ci.org/github/zipmark/rspec_api_documentation.png)](http://inch-ci.org/github/zipmark/rspec_api_documentation)
 [![Gem Version](https://badge.fury.io/rb/rspec_api_documentation.svg)](http://badge.fury.io/rb/rspec_api_documentation)
 
 # RSpec API Doc Generator
@@ -22,12 +23,12 @@ Add rspec_api_documentation to your Gemfile
 Bundle it!
 
     $ bundle install
-    
+
 Set up specs.
 
     $ mkdir spec/acceptance
     $ vim spec/acceptance/orders_spec.rb
-    
+
 ```ruby
 require 'spec_helper'
 require 'rspec_api_documentation/dsl'
@@ -36,7 +37,7 @@ resource "Orders" do
   get "/orders" do
     example "Listing orders" do
       do_request
-      
+
       status.should == 200
     end
   end
@@ -58,7 +59,7 @@ Consider adding a viewer to enhance the generated documentation. By itself rspec
 #### Gemfile
 
     gem 'raddocs'
-    
+
 #### spec/spec_helper.rb
 
 ```ruby
@@ -78,24 +79,24 @@ See the `example` folder for a sample Rails app that has been documented.
 RspecApiDocumentation.configure do |config|
   # Set the application that Rack::Test uses
   config.app = Rails.application
-  
+
   # Output folder
   config.docs_dir = Rails.root.join("doc", "api")
-  
+
   # An array of output format(s).
   # Possible values are :json, :html, :combined_text, :combined_json,
   #   :json_iodocs, :textile, :markdown, :jekyll, :append_json
   config.format = [:html]
-  
+
   # Location of templates
   config.template_path = "inside of the gem"
-  
+
   # Filter by example document type
   config.filter = :all
-  
+
   # Filter by example document type
   config.exclusion_filter = nil
-  
+
   # Used when adding a cURL output to the docs
   config.curl_host = nil
 
@@ -113,27 +114,35 @@ RspecApiDocumentation.configure do |config|
   # By default examples and resources are ordered by description. Set to true keep
   # the source order.
   config.keep_source_order = false
-  
+
   # Change the name of the API on index pages
   config.api_name = "API Documentation"
-  
+
   # Redefine what method the DSL thinks is the client
   # This is useful if you need to `let` your own client, most likely a model.
   config.client_method = :client
 
   # Change the IODocs writer protocol
   config.io_docs_protocol = "http"
-  
+
   # You can define documentation groups as well. A group allows you generate multiple
   # sets of documentation.
   config.define_group :public do |config|
     # By default the group's doc_dir is a subfolder under the parent group, based
     # on the group's name.
     config.docs_dir = Rails.root.join("doc", "api", "public")
-    
+
     # Change the filter to only include :public examples
     config.filter = :public
   end
+
+  # Change how the post body is formatted by default, you can still override by `raw_post`
+  # Can be :json, :xml, or a proc that will be passed the params
+  config.post_body_formatter = Proc.new { |params| params }
+
+  # Change the embedded style for HTML output. This file will not be processed by
+  # RspecApiDocumentation and should be plain CSS.
+  config.html_embedded_css_file = nil
 end
 ```
 
@@ -191,33 +200,33 @@ You tag examples with either a single symbol or an array of symbols.
 resource "Account" do
   get "/accounts" do
     parameter :page, "Page to view"
-    
+
     # default :document is :all
     example "Get a list of all accounts" do
       do_request
       status.should == 200
     end
-    
+
     # Don't actually document this example, purely for testing purposes
     example "Get a list on page 2", :document => false do
       do_request(:page => 2)
       status.should == 404
     end
-    
+
     # With example_request, you can't change the :document
     example_request "Get a list on page 3", :page => 3 do
       status.should == 404
     end
   end
-  
+
   post "/accounts" do
     parameter :email, "User email"
-    
+
     example "Creating an account", :document => :private do
       do_request(:email => "eric@example.com")
       status.should == 201
     end
-    
+
     example "Creating an account - errors", :document => [:private, :developers] do
       do_request
       status.should == 422
@@ -234,12 +243,12 @@ RspecApiDocumentation.configure do |config|
   config.define_group :non_private do |config|
     config.exclusion_filter = :private
   end
-  
+
   # Only document examples marked as 'public'
   config.define_group :public do |config|
     config.filter = :public
   end
-  
+
   # Only document examples marked as 'developer'
   config.define_group :developers do |config|
     config.filter = :developers
@@ -334,6 +343,22 @@ resource "Orders" do
 end
 ```
 
+#### explanation
+
+This method takes a string representing a detailed explanation of the example.
+
+```ruby
+resource "Orders" do
+  post "/orders" do
+    example "Creating an order" do
+      explanation "This method creates a new order."
+      do_request
+      # make assertions
+    end
+  end
+end
+```
+
 #### header
 
 This method takes the header name and value. The value can be a string or a symbol. If it is a symbol it will `send` the symbol, allowing you to `let` header values.
@@ -355,7 +380,7 @@ end
 
 #### parameter
 
-This method takes the parameter name, a description, and an optional hash of extra metadata that can be displayed in Raddocs as extra columns. If a method with the parameter name exists, e.g. a `let`, it will send the returned value up to the server as URL encoded data. 
+This method takes the parameter name, a description, and an optional hash of extra metadata that can be displayed in Raddocs as extra columns. If a method with the parameter name exists, e.g. a `let`, it will send the returned value up to the server as URL encoded data.
 
 Special values:
 
@@ -375,6 +400,25 @@ resource "Orders" do
 
     example "Creating an order" do
       params.should == { :order => { :name => "My Order" }, :auth_token => auth_token }
+    end
+  end
+end
+```
+
+#### response_field
+
+This method takes the response field name, a description, and an optional hash of extra metadata that can be displayed in Raddocs as extra columns.
+
+Special values:
+* `:scope => :the_scope` Will scope the response field in the hash
+
+```ruby
+resource "Orders" do
+  response_field :page, "Current page"
+
+  get "/orders" do
+    example_request "Getting orders" do
+      expect(response_body).to eq({ :page => 1 }.to_json)
     end
   end
 end
@@ -609,3 +653,4 @@ $ rspec spec/acceptance --format RspecApiDocumentation::ApiFormatter
 
 - rspec_api_documentation relies on a variable `client` to be the test client. If you define your own `client` please configure rspec_api_documentation to use another one, see Configuration above.
 - We make heavy use of RSpec metadata, you can actually use the entire gem without the DSL if you hand write the metadata.
+- You must use `response_body`, `status`, `response_content_type`, etc. to access data from the last response. You will not be able to use `response.body` or `response.status` as the response object will not be created.

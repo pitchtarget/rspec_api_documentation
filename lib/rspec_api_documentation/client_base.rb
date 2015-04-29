@@ -1,4 +1,7 @@
 module RspecApiDocumentation
+  # Base client class that documents all requests that go through it.
+  #
+  #  client.get("/orders", { :page => 2 }, { "Accept" => "application/json" })
   class ClientBase < Struct.new(:context, :options)
     include Headers
 
@@ -40,12 +43,16 @@ module RspecApiDocumentation
       document_example(method.to_s.upcase, path)
     end
 
+    def read_request_body
+      input = last_request.env["rack.input"]
+      input.rewind
+      input.read
+    end
+
     def document_example(method, path)
       return unless metadata[:document]
 
-      input = last_request.env["rack.input"]
-      input.rewind
-      request_body = input.read
+      request_body = read_request_body
 
       request_metadata = {}
 
@@ -55,7 +62,7 @@ module RspecApiDocumentation
 
       request_metadata[:request_method] = method
       request_metadata[:request_path] = path
-      request_metadata[:request_body] = request_body.empty? ? nil : request_body
+      request_metadata[:request_body] = request_body.empty? ? nil : request_body.force_encoding("UTF-8")
       request_metadata[:request_headers] = request_headers
       request_metadata[:request_query_parameters] = query_hash
       request_metadata[:request_content_type] = request_content_type
@@ -71,16 +78,25 @@ module RspecApiDocumentation
     end
 
     def query_hash
-      strings = query_string.split("&")
-      arrays = strings.map do |segment|
-        k,v = segment.split("=")
-        [k, v && CGI.unescape(v)]
-      end
-      Hash[arrays]
+      Rack::Utils.parse_nested_query(query_string)
     end
 
     def headers(method, path, params, request_headers)
       request_headers || {}
+    end
+
+    def clean_out_uploaded_data(params, request_body)
+      params.each do |_, value|
+        if value.is_a?(Hash)
+          if value.has_key?(:tempfile)
+            data = value[:tempfile].read
+            request_body = request_body.gsub(data, "[uploaded data]")
+          else
+            request_body = clean_out_uploaded_data(value,request_body)
+          end
+        end
+      end
+      request_body
     end
   end
 end

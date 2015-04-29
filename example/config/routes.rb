@@ -1,5 +1,5 @@
-Example::Application.routes.draw do
+Rails.application.routes.draw do
   resources :orders
 
-  match "/docs" => Raddocs::App, :anchor => false
+  mount Raddocs::App => "/docs", :anchor => false
 end
